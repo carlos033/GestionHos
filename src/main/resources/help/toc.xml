@@ -1,0 +1,14 @@
+<toc version="1.0">
+    <!--
+      categoryclosedimage="FolderClosed" categoryopenimage="FolderOpened"  
+    topicimage="ItemIco"
+    -->
+    <tocitem text="Opciones hospitalaria - ayuda general" target="OpcionesHos">
+		<tocitem text="Gestion hospitalarias" target="Gestion"/>
+        <tocitem text="Crear Informe" target="CrearI"/>
+		<tocitem text="Crear Cita" target="CrearC"/>				
+		<tocitem text="Creación hospitales" target="CrearHos"/>
+		<tocitem text="Eliminar médico" target="EliminarM"/>
+		<tocitem text="Gestiones médicas" target="GestionM"/>
+    </tocitem>
+</toc>

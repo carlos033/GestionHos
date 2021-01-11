@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!DOCTYPE map
+PUBLIC "-//Sun Microsystems Inc.//DTD JavaHelp Map Version 2.0//EN"
+"http://java.sun.com/products/javahelp/map_2_0.dtd">
+<map version="1.0">
+   <mapID target="Gestion" url="html/Gestion.html"/>
+   <mapID target="CrearI" url="html/CrearI.html" />
+   <mapID target="CrearC" url="html/CrearC.html" />
+   <mapID target="CrearHos" url="html/CrearHos.html" />
+   <mapID target="EliminarM" url="html/EliminarM.html" />
+   <mapID target="GestionM" url="html/GestionM.html" />
+   <mapID target="OpcionesHos" url="html/OpcionesHos.html" />
+</map>
