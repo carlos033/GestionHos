@@ -1,19 +1,13 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * To change this license header, choose License Headers in Project Properties. To change this template file, choose Tools | Templates and open the template in the editor.
  */
 package gestion.gestionHospitales;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import gestion.api.MiApi;
-import gestion.api.NetworkClient;
-import gestion.api.VariablesLogin;
-import gestion.dto.MedicoDTO;
 import java.awt.AWTException;
+import java.awt.Frame;
 import java.awt.Robot;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,13 +15,36 @@ import java.net.URL;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.help.HelpBroker;
 import javax.help.HelpSet;
 import javax.help.HelpSetException;
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
+import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.LayoutStyle;
 import javax.swing.SwingWorker;
+import javax.swing.WindowConstants;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.SoftBevelBorder;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+import gestion.api.MiApi;
+import gestion.api.NetworkClient;
+import gestion.api.VariablesLogin;
+import gestion.dto.MedicoDTO;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -36,360 +53,292 @@ import retrofit2.Retrofit;
  *
  * @author ck
  */
-public class OpcionesHos extends javax.swing.JDialog {
+public class OpcionesHos extends JDialog {
 
-    /**
-     * Creates new form OpcionesHos
-     *
-     * @param parent
-     * @param modal
-     */
-    public OpcionesHos(java.awt.Frame parent, boolean modal) {
-        super(parent, modal);
-        try {
-            initComponents();
-            InputStream inputAvatar = OpcionesHos.class.getResourceAsStream("/hospital.jpg");
-            jLabel1.setIcon(new ImageIcon(ImageIO.read(inputAvatar)));
-            setTitle("GESTION HOSPITALARIA");
-            setLocationRelativeTo(null);
-            buscarMedicoLicencia().execute();
-            ponLaAyuda();
-        } catch (IOException ex) {
-            Logger.getLogger(OpcionesHos.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
+	private static final long serialVersionUID = 1L;
 
-    private void ponLaAyuda() {
-        try {
-            URL hsURL = HelpSet.findHelpSet(getClass().getClassLoader(), "help/help_set.hs");
-            HelpSet helpset = new HelpSet(getClass().getClassLoader(), hsURL);
-            HelpBroker hb = helpset.createHelpBroker();
-            hb.enableHelpKey(getRootPane(), "OpcionesHos", helpset);
-        } catch (IllegalArgumentException | HelpSetException e) {
-        }
-    }
+	public OpcionesHos(Frame parent, boolean modal) {
+		super(parent, modal);
+		try {
+			initComponents();
+			InputStream inputAvatar = OpcionesHos.class.getResourceAsStream("/hospital.jpg");
+			jLabel1.setIcon(new ImageIcon(ImageIO.read(inputAvatar)));
+			setTitle("GESTION HOSPITALARIA");
+			setLocationRelativeTo(null);
+			buscarMedicoLicencia().execute();
+			ponLaAyuda();
+		} catch (IOException ex) {
+			Logger.getLogger(OpcionesHos.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
 
-    private SwingWorker<Response<MedicoDTO>, Void> buscarMedicoLicencia() {
-        return new SwingWorker<Response<MedicoDTO>, Void>() {
-            @Override
-            protected Response<MedicoDTO> doInBackground() throws Exception {
-                Response<MedicoDTO> medico = BuscarMedico();
-                return medico;
-            }
+	private void ponLaAyuda() {
+		try {
+			URL hsURL = HelpSet.findHelpSet(getClass().getClassLoader(), "help/help_set.hs");
+			HelpSet helpset = new HelpSet(getClass().getClassLoader(), hsURL);
+			HelpBroker hb = helpset.createHelpBroker();
+			hb.enableHelpKey(getRootPane(), "OpcionesHos", helpset);
+		} catch (IllegalArgumentException | HelpSetException e) {
+		}
+	}
 
-            @Override
-            protected void done() {
-                Response<MedicoDTO> resultado;
-                try {
-                    resultado = get();
-                    if (resultado.isSuccessful()) {
-                        VariablesLogin.setMedico(resultado.body());
-                    } else {
-                        JsonObject convertedObject = new Gson().fromJson(resultado.errorBody().string(), JsonObject.class);
-                        JsonElement msgElement = convertedObject.get("message");
-                        JOptionPane.showMessageDialog(null, "Error de carga " + msgElement.toString());
-                    }
-                } catch (InterruptedException | ExecutionException ex) {
-                    JOptionPane.showMessageDialog(null, "Fallo de comunicacion " + ex);
-                } catch (IOException ex) {
-                    Logger.getLogger(AniadirCitas.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        };
-    }
+	private SwingWorker<Response<MedicoDTO>, Void> buscarMedicoLicencia() {
+		return new SwingWorker<Response<MedicoDTO>, Void>() {
+			@Override
+			protected Response<MedicoDTO> doInBackground() throws Exception {
+				Response<MedicoDTO> medico = BuscarMedico();
+				return medico;
+			}
 
-    private Response<MedicoDTO> BuscarMedico() {
-        String licencia = VariablesLogin.getIdUsuario();
-        String token = VariablesLogin.getToken();
-        Retrofit retrofit = NetworkClient.getRetrofitClientWithToken(token);
-        MiApi myAPI = retrofit.create(MiApi.class);
-        Call<MedicoDTO> call = myAPI.obtenerMedico(licencia);
-        Response<MedicoDTO> resp = null;
-        try {
-            resp = call.execute();
-        } catch (IOException ex) {
-            Logger.getLogger(Login.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-        return resp;
-    }
+			@Override
+			protected void done() {
+				Response<MedicoDTO> resultado;
+				try {
+					resultado = get();
+					if (resultado.isSuccessful()) {
+						VariablesLogin.setMedico(resultado.body());
+					} else {
+						JsonObject convertedObject = new Gson().fromJson(resultado.errorBody().string(), JsonObject.class);
+						JsonElement msgElement = convertedObject.get("message");
+						JOptionPane.showMessageDialog(null, "Error de carga " + msgElement.toString());
+					}
+				} catch (InterruptedException | ExecutionException ex) {
+					JOptionPane.showMessageDialog(null, "Fallo de comunicacion " + ex);
+				} catch (IOException ex) {
+					Logger.getLogger(AniadirCitas.class.getName()).log(Level.SEVERE, null, ex);
+				}
+			}
+		};
+	}
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
+	private Response<MedicoDTO> BuscarMedico() {
+		String licencia = VariablesLogin.getIdUsuario();
+		String token = VariablesLogin.getToken();
+		Retrofit retrofit = NetworkClient.getRetrofitClientWithToken(token);
+		MiApi myAPI = retrofit.create(MiApi.class);
+		Call<MedicoDTO> call = myAPI.obtenerMedico(licencia);
+		Response<MedicoDTO> resp = null;
+		try {
+			resp = call.execute();
+		} catch (IOException ex) {
+			Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		return resp;
+	}
 
-        jPanel2 = new javax.swing.JPanel();
-        jButton4 = new javax.swing.JButton();
-        jButton5 = new javax.swing.JButton();
-        jLabel1 = new javax.swing.JLabel();
-        jPanel1 = new javax.swing.JPanel();
-        jButton1 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
-        jPanel3 = new javax.swing.JPanel();
-        btnHos = new javax.swing.JButton();
-        jMenuBar1 = new javax.swing.JMenuBar();
-        jMenu1 = new javax.swing.JMenu();
-        jMenuItem1 = new javax.swing.JMenuItem();
-        jMenu2 = new javax.swing.JMenu();
-        jMenuItem2 = new javax.swing.JMenuItem();
-        jMenuItem3 = new javax.swing.JMenuItem();
+	private void initComponents() {
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+		jPanel2 = new JPanel();
+		jButton4 = new JButton();
+		jButton5 = new JButton();
+		jLabel1 = new JLabel();
+		jPanel1 = new JPanel();
+		jButton1 = new JButton();
+		jButton3 = new JButton();
+		jPanel3 = new JPanel();
+		btnHos = new JButton();
+		jMenuBar1 = new JMenuBar();
+		jMenu1 = new JMenu();
+		jMenuItem1 = new JMenuItem();
+		jMenu2 = new JMenu();
+		jMenuItem2 = new JMenuItem();
+		jMenuItem3 = new JMenuItem();
 
-        jPanel2.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.LOWERED));
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
-        jButton4.setText("<html> Añadir<br>Informe</html>");
-        jButton4.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        jButton4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4ActionPerformed(evt);
-            }
-        });
+		jPanel2.setBorder(new SoftBevelBorder(BevelBorder.LOWERED));
 
-        jButton5.setText("<html> Añadir <br>Cita</html>");
-        jButton5.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        jButton5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton5ActionPerformed(evt);
-            }
-        });
+		jButton4.setText("<html> Añadir<br>Informe</html>");
+		jButton4.setBorder(new SoftBevelBorder(BevelBorder.RAISED));
+		jButton4.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				jButton4ActionPerformed(evt);
+			}
+		});
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
+		jButton5.setText("<html> Añadir <br>Cita</html>");
+		jButton5.setBorder(new SoftBevelBorder(BevelBorder.RAISED));
+		jButton5.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				jButton5ActionPerformed(evt);
+			}
+		});
 
-        jLabel1.setAutoscrolls(true);
-        jLabel1.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.LOWERED));
+		GroupLayout jPanel2Layout = new GroupLayout(jPanel2);
+		jPanel2.setLayout(jPanel2Layout);
+		jPanel2Layout
+		        .setHorizontalGroup(
+		                jPanel2Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+		                        .addGroup(jPanel2Layout.createSequentialGroup().addContainerGap().addGroup(jPanel2Layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+		                                .addComponent(jButton5, GroupLayout.PREFERRED_SIZE, 67, GroupLayout.PREFERRED_SIZE).addComponent(jButton4, GroupLayout.Alignment.LEADING, GroupLayout.PREFERRED_SIZE, 67, GroupLayout.PREFERRED_SIZE))
+		                                .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
+		jPanel2Layout.setVerticalGroup(
+		        jPanel2Layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(jPanel2Layout.createSequentialGroup().addContainerGap().addComponent(jButton4, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+		                .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addComponent(jButton5, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE).addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.LOWERED));
+		jLabel1.setAutoscrolls(true);
+		jLabel1.setBorder(new SoftBevelBorder(BevelBorder.LOWERED));
 
-        jButton1.setText("<html> Gestión<br>Hospital</html>");
-        jButton1.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
+		jPanel1.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 
-        jButton3.setText("Médicos");
-        jButton3.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3ActionPerformed(evt);
-            }
-        });
+		jButton1.setText("<html> Gestión<br>Hospital</html>");
+		jButton1.setBorder(new SoftBevelBorder(BevelBorder.RAISED));
+		jButton1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				jButton1ActionPerformed(evt);
+			}
+		});
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 71, Short.MAX_VALUE)
-                    .addComponent(jButton3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
+		jButton3.setText("Médicos");
+		jButton3.setBorder(new SoftBevelBorder(BevelBorder.RAISED));
+		jButton3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				jButton3ActionPerformed(evt);
+			}
+		});
 
-        jPanel3.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.LOWERED));
+		GroupLayout jPanel1Layout = new GroupLayout(jPanel1);
+		jPanel1.setLayout(jPanel1Layout);
+		jPanel1Layout.setHorizontalGroup(jPanel1Layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(jPanel1Layout.createSequentialGroup().addContainerGap().addGroup(
+		        jPanel1Layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(jButton1, GroupLayout.DEFAULT_SIZE, 71, Short.MAX_VALUE).addComponent(jButton3, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+		        .addContainerGap()));
+		jPanel1Layout.setVerticalGroup(
+		        jPanel1Layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(jPanel1Layout.createSequentialGroup().addContainerGap().addComponent(jButton1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+		                .addGap(18, 18, 18).addComponent(jButton3, GroupLayout.PREFERRED_SIZE, 36, GroupLayout.PREFERRED_SIZE).addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
 
-        btnHos.setText("<html> Nuevo <br> Hospital</html>");
-        btnHos.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        btnHos.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnHosActionPerformed(evt);
-            }
-        });
+		jPanel3.setBorder(new SoftBevelBorder(BevelBorder.LOWERED));
 
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(btnHos)
-                .addContainerGap())
-        );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(btnHos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
+		btnHos.setText("<html> Nuevo <br> Hospital</html>");
+		btnHos.setBorder(new SoftBevelBorder(BevelBorder.RAISED));
+		btnHos.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				btnHosActionPerformed(evt);
+			}
+		});
 
-        jMenu1.setText("Gestion");
+		GroupLayout jPanel3Layout = new GroupLayout(jPanel3);
+		jPanel3.setLayout(jPanel3Layout);
+		jPanel3Layout.setHorizontalGroup(jPanel3Layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup().addContainerGap().addComponent(btnHos).addContainerGap()));
+		jPanel3Layout.setVerticalGroup(jPanel3Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+		        .addGroup(jPanel3Layout.createSequentialGroup().addContainerGap().addComponent(btnHos, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE).addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
 
-        jMenuItem1.setText("Salir");
-        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem1ActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItem1);
+		jMenu1.setText("Gestion");
 
-        jMenuBar1.add(jMenu1);
+		jMenuItem1.setText("Salir");
+		jMenuItem1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				jMenuItem1ActionPerformed(evt);
+			}
+		});
+		jMenu1.add(jMenuItem1);
 
-        jMenu2.setText("Ayuda");
+		jMenuBar1.add(jMenu1);
 
-        jMenuItem2.setText("Ayuda F1");
-        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem2ActionPerformed(evt);
-            }
-        });
-        jMenu2.add(jMenuItem2);
+		jMenu2.setText("Ayuda");
 
-        jMenuItem3.setText("Acerca de");
-        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem3ActionPerformed(evt);
-            }
-        });
-        jMenu2.add(jMenuItem3);
+		jMenuItem2.setText("Ayuda F1");
+		jMenuItem2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				jMenuItem2ActionPerformed(evt);
+			}
+		});
+		jMenu2.add(jMenuItem2);
 
-        jMenuBar1.add(jMenu2);
+		jMenuItem3.setText("Acerca de");
+		jMenuItem3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				jMenuItem3ActionPerformed(evt);
+			}
+		});
+		jMenu2.add(jMenuItem3);
 
-        setJMenuBar(jMenuBar1);
+		jMenuBar1.add(jMenu2);
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(22, 22, 22)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(30, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(43, 43, 43)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(44, 44, 44)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 247, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(18, Short.MAX_VALUE))
-        );
+		setJMenuBar(jMenuBar1);
 
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
+		GroupLayout layout = new GroupLayout(getContentPane());
+		getContentPane().setLayout(layout);
+		layout.setHorizontalGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+		        .addGroup(layout.createSequentialGroup().addGap(22, 22, 22)
+		                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING, false).addComponent(jPanel2, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE).addComponent(jPanel3, GroupLayout.DEFAULT_SIZE,
+		                        GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+		                .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addComponent(jLabel1, GroupLayout.PREFERRED_SIZE, 220, GroupLayout.PREFERRED_SIZE).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+		                .addComponent(jPanel1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE).addContainerGap(30, Short.MAX_VALUE)));
+		layout.setVerticalGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup()
+		        .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addGap(43, 43, 43).addComponent(jPanel1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+		                .addGroup(layout.createSequentialGroup().addGap(44, 44, 44).addComponent(jPanel2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE).addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+		                        .addComponent(jPanel3, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+		                .addGroup(layout.createSequentialGroup().addContainerGap().addComponent(jLabel1, GroupLayout.PREFERRED_SIZE, 247, GroupLayout.PREFERRED_SIZE)))
+		        .addContainerGap(18, Short.MAX_VALUE)));
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        GestionHos gestion = new GestionHos(this, true);
-        gestion.setVisible(true);
-    }//GEN-LAST:event_jButton1ActionPerformed
+		pack();
+	}
 
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        GestionMedicos medicos = new GestionMedicos(this, true);
-        medicos.setVisible(true);
-    }//GEN-LAST:event_jButton3ActionPerformed
+	private void jButton1ActionPerformed(ActionEvent evt) {
+		GestionHos gestion = new GestionHos(this, true);
+		gestion.setVisible(true);
+	}
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        AniadirInforme informe = new AniadirInforme(this, true);
-        informe.setVisible(true);
-    }//GEN-LAST:event_jButton4ActionPerformed
+	private void jButton3ActionPerformed(ActionEvent evt) {
+		GestionMedicos medicos = new GestionMedicos(this, true);
+		medicos.setVisible(true);
+	}
 
-    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        AniadirCitas citas = new AniadirCitas(this, true);
-        citas.setVisible(true);
-    }//GEN-LAST:event_jButton5ActionPerformed
+	private void jButton4ActionPerformed(ActionEvent evt) {
+		AniadirInforme informe = new AniadirInforme(this, true);
+		informe.setVisible(true);
+	}
 
-    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        System.exit(0);
-    }//GEN-LAST:event_jMenuItem1ActionPerformed
+	private void jButton5ActionPerformed(ActionEvent evt) {
+		AniadirCitas citas = new AniadirCitas(this, true);
+		citas.setVisible(true);
+	}
 
-    private void btnHosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHosActionPerformed
-        if (VariablesLogin.getMedico().getEspecialidad().compareToIgnoreCase("Administrador") == 0) {
-            CrearHos hos = new CrearHos(this, true);
-            hos.setVisible(true);
-        } else {
-            JOptionPane.showMessageDialog(null, "Solo los administradores del sistema pueden acceder a esta opcion");
-        }
-    }//GEN-LAST:event_btnHosActionPerformed
+	private void jMenuItem1ActionPerformed(ActionEvent evt) {
+		System.exit(0);
+	}
 
-    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
-        try {
-            AcercaDe a = new AcercaDe(this, true);
-            a.setVisible(true);
-        } catch (IOException ex) {
-            Logger.getLogger(OpcionesHos.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_jMenuItem3ActionPerformed
+	private void btnHosActionPerformed(ActionEvent evt) {
+		if (VariablesLogin.getMedico().getEspecialidad().compareToIgnoreCase("Administrador") == 0) {
+			CrearHos hos = new CrearHos(this, true);
+			hos.setVisible(true);
+		} else {
+			JOptionPane.showMessageDialog(null, "Solo los administradores del sistema pueden acceder a esta opcion");
+		}
+	}
 
-    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
-        try {
-            Robot robot = new Robot();
-            robot.keyPress(KeyEvent.VK_F1);
-            robot.keyRelease(KeyEvent.VK_F1);
+	private void jMenuItem3ActionPerformed(ActionEvent evt) {
+		try {
+			AcercaDe a = new AcercaDe(this, true);
+			a.setVisible(true);
+		} catch (IOException ex) {
+			Logger.getLogger(OpcionesHos.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
 
-        } catch (AWTException e) {
-        }
-    }//GEN-LAST:event_jMenuItem2ActionPerformed
+	private void jMenuItem2ActionPerformed(ActionEvent evt) {
+		try {
+			Robot robot = new Robot();
+			robot.keyPress(KeyEvent.VK_F1);
+			robot.keyRelease(KeyEvent.VK_F1);
 
-    /**
-     * @param args the command line arguments
-     */
+		} catch (AWTException e) {
+		}
+	}
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnHos;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
-    private javax.swing.JButton jButton5;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
-    private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem1;
-    private javax.swing.JMenuItem jMenuItem2;
-    private javax.swing.JMenuItem jMenuItem3;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    // End of variables declaration//GEN-END:variables
+	private JButton btnHos;
+	private JButton jButton1;
+	private JButton jButton3;
+	private JButton jButton4;
+	private JButton jButton5;
+	private JLabel jLabel1;
+	private JMenu jMenu1;
+	private JMenu jMenu2;
+	private JMenuBar jMenuBar1;
+	private JMenuItem jMenuItem1;
+	private JMenuItem jMenuItem2;
+	private JMenuItem jMenuItem3;
+	private JPanel jPanel1;
+	private JPanel jPanel2;
+	private JPanel jPanel3;
 }
